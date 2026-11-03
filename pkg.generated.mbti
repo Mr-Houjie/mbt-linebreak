@@ -1,0 +1,40 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Mr-Houjie/mbt-linebreak"
+
+// Values
+pub fn break_flags(String, BreakKind) -> Array[Bool]
+
+pub fn display_width(String) -> Int32
+
+pub fn eaw_name(Int32) -> String
+
+pub fn graphemes(String) -> Array[String]
+
+pub fn line_breaks(String) -> Array[LineBreak]
+
+pub fn sentences(String) -> Array[String]
+
+pub fn unicode_version() -> String
+
+pub fn words(String) -> Array[String]
+
+pub fn wrap(String, Int32) -> Array[String]
+
+// Errors
+
+// Types and methods
+pub(all) enum BreakKind {
+  Grapheme
+  Word
+  Sentence
+  Line
+}
+
+pub(all) struct LineBreak {
+  index : Int32
+  mandatory : Bool
+}
+
+// Type aliases
+
+// Traits
