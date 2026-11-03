@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check-build-test:
+    runs-on: ubuntu-latest
+    name: Check / Build / Test / Conformance
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Update dependencies
+        run: |
+          moon version --all
+          moon update
+
+      - name: Check (type/syntax)
+        run: moon check --deny-warn
+
+      - name: Build
+        run: moon build
+
+      - name: Test
+        run: moon test
+
+      - name: Conformance against official Unicode test files
+        run: |
+          set -o pipefail
+          moon run cmd/verify 2>&1 | tee conformance.log
+
+      - name: Annotate conformance failures
+        if: failure()
+        run: |
+          echo "::group::conformance.log"
+          cat conformance.log || true
+          echo "::endgroup::"
+          grep -E "conformance-fail:|read-error|empty |mismatch|verify:" conformance.log | while IFS= read -r line; do
+            echo "::error::$line"
+          done
+
+      - name: Python oracle cross-check
+        run: python3 tools/oracle.py
