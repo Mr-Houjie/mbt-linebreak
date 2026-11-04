@@ -175,6 +175,12 @@ fn main {
     }
   }
   if failures.length() == 0 {
+    let bidi_failures = run_bidi_conformance(base)
+    for f in bidi_failures {
+      failures.push(f)
+    }
+  }
+  if failures.length() == 0 {
     println("conformance: ok")
     @sys.exit(0)
   }

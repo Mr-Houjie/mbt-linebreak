@@ -1,5 +1,6 @@
 import {
   "Mr-Houjie/mbt-linebreak",
+  "Mr-Houjie/mbt-linebreak/bidi",
   "moonbitlang/core/env",
   "moonbitlang/x/fs",
   "moonbitlang/x/sys",
