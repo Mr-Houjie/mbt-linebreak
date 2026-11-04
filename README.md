@@ -5,18 +5,20 @@
 
 Unicode 18.0.0 文本边界与行断裂的纯 MoonBit 实现。
 
-`mbt-linebreak` 回答两个很具体的问题：**这段文本的字符、词、句在哪里分界**，
-以及 **一行排不下时应该在哪里断开**。核心库不依赖任何第三方包，
-所有判定只依据 UCD 属性表，因此同一份输入在任何后端上结果一致。
+`mbt-linebreak` 回答三个很具体的问题：**这段文本的字符、词、句在哪里分界**、
+**一行排不下时应该在哪里断开**，以及 **双向文本应该按什么顺序显示**。
+核心库不依赖任何第三方包，所有判定只依据 UCD 属性表，
+因此同一份输入在任何后端上结果一致。
 
 ## 为什么需要它
 
 MoonBit 生态里已有字素簇断点（`moonbit-community/find_cluster_break`）和
-等宽宽度（`moonbit-community/unicodewidth`）的实现，但**没有 UAX #14 行断裂**：
-没有断行机会，就没有真正的自动换行、终端折行和排版断行。
+等宽宽度（`moonbit-community/unicodewidth`）的实现，但**没有 UAX #14 行断裂**，
+也**没有 UAX #9 双向算法**：没有断行机会就没有真正的自动换行，
+没有 BiDi 就无法正确显示阿拉伯文、希伯来文与混排文本。
 
-`mbt-linebreak` 补的是这一环，并且把 UAX #29 的词/句边界一并做全，
-让“文本能放在哪里断开”成为一个可验证的确定性答案。
+`mbt-linebreak` 补的是这两环，并且把 UAX #29 的词/句边界一并做全，
+让“文本能放在哪里断开、按什么顺序显示”成为可验证的确定性答案。
 
 ## 实测一致性
 
@@ -28,9 +30,12 @@ MoonBit 生态里已有字素簇断点（`moonbit-community/find_cluster_break`�
 | `WordBreakTest.txt` | 1944 / 1944 |
 | `SentenceBreakTest.txt` | 512 / 512 |
 | `LineBreakTest.txt` | 19346 / 19346 |
+| `BidiCharacterTest.txt` | 91707 / 91707 |
+| `BidiTest.txt` | 770241 / 770241 |
 
-合计 **22,655 条用例，100% 通过**，并覆盖 Unicode 18.0 的新规则
-（GB9c 修订、LB15a/b/c/d、LB19a、LB20a、LB28a）。
+合计 **884,603 条用例，100% 通过**，并覆盖 Unicode 18.0 的新规则
+（GB9c 修订、LB15a/b/c/d、LB19a、LB20a、LB28a）与 UAX #9 的隔离符、
+括号配对（BD16）、125 层深度上限。
 
 ## 安装
 
@@ -75,7 +80,24 @@ test {
 | `display_width(s)` | 等宽字体下的显示宽度（列数） |
 | `unicode_version()` | 属性表对应的 Unicode 版本 |
 
+`bidi` 包（UAX #9）：
+
+| 函数 | 说明 |
+|---|---|
+| `resolve(s, dir)` | 完整双向算法，返回每个字符的层级与视觉顺序 |
+| `reorder(s, dir)` | 按视觉顺序重排字符串 |
+| `paragraph_level_of(s, dir)` | 解析出的段落层级（0 = LTR，1 = RTL） |
+| `resolve_codepoints(cps, dir)` / `resolve_by_classes(cps, dir)` | 码点或类别序列入口，供工具与测试使用 |
+
 断点位置按**字符（码点）**计数，不是 UTF-8 字节偏移。
+
+```moonbit
+///|
+test {
+  let r = @Mr-Houjie/mbt-linebreak/bidi.reorder("אבג", @Mr-Houjie/mbt-linebreak/bidi.Direction::Rtl)
+  inspect(r, content="גבא")
+}
+```
 
 ## 命令行
 
@@ -98,13 +120,20 @@ mbt-linebreak/
 ├── line.mbt                   # UAX #14 行断裂
 ├── width.mbt                  # 显示宽度
 ├── tables_*.mbt               # 由 UCD 生成的属性表（勿手改）
+├── bidi/                      # UAX #9 双向算法（独立包）
+│   ├── types.mbt / props.mbt  # 方向、结果类型与属性查询
+│   ├── bidi.mbt               # P/X/W/N/I/L 规则
+│   ├── api.mbt                # 公开 API
+│   └── tables_bidi.mbt        # Bidi_Class 与括号对（生成）
 ├── cmd/main/                  # CLI
 ├── cmd/verify/                # 官方语料自检
 ├── corpus/ucd/                # Unicode 18.0.0 数据与测试文件
 └── tools/
     ├── fetch_corpus.py        # 下载 UCD
     ├── gen_tables.py          # UCD → MoonBit 表
-    └── oracle.py              # Python 参考实现，用于交叉验证
+    ├── gen_bidi_tables.py     # UCD → Bidi 表
+    ├── oracle.py              # Python 参考实现（分段与断行）
+    └── oracle_bidi.py         # Python 参考实现（UAX #9）
 ```
 
 ## 数据管线（可复现）
@@ -112,12 +141,15 @@ mbt-linebreak/
 ```bash
 python tools/fetch_corpus.py     # 下载 Unicode 18.0.0
 python tools/gen_tables.py       # 生成 tables_*.mbt
-python tools/oracle.py           # Python 侧对拍（开发期使用）
-moon run cmd/verify              # MoonBit 侧对拍
+python tools/gen_bidi_tables.py  # 生成 bidi/tables_bidi.mbt
+python tools/oracle.py           # Python 侧对拍：分段与断行
+python tools/oracle_bidi.py      # Python 侧对拍：UAX #9
+moon run cmd/verify              # MoonBit 侧对拍（六个语料）
 ```
 
-`tools/oracle.py` 是同一套规则的 Python 实现，用来在移植前快速迭代规则；
-两个实现的输出都与官方语料 100% 一致，可作为交叉验证。
+`tools/oracle.py` 与 `tools/oracle_bidi.py` 是同一套规则的 Python 实现，
+用来在移植前快速迭代规则；两个实现的输出都与官方语料 100% 一致，
+可作为交叉验证。
 
 ## 已知边界
 
@@ -126,7 +158,9 @@ moon run cmd/verify              # MoonBit 侧对拍
   不同渲染引擎的显示结果可能不同。
 - **不做词典断词**：泰文、老挝文、高棉文的词典式断词不在范围内，
   按 UAX #29 的默认规则处理。
-- **不做 BiDi、连字（hyphenation）与字形 shaping**：这些属于排版器的其他层次。
+- **不做连字（hyphenation）与字形 shaping**：这些属于排版器的其他层次。
+- **BiDi 按段落处理**：`bidi` 包实现了 UAX #9 的完整算法与重排，
+  但不负责换行后的逐行重排（行级 L1/L2 需由调用方按行重新调用）。
 
 ## 与既有实现的关系
 
@@ -137,8 +171,8 @@ moon run cmd/verify              # MoonBit 侧对拍
 
 相对参考实现的主要增量：
 
-- 对齐 Unicode **18.0.0**（`rivo/uniseg` 当前为 15.0）
-- 覆盖 UAX #14 revision 57 的新规则
+- 对齐 Unicode **18.0.0**（`rivo/uniseg` 当前为 15.0，且不含 UAX #9）
+- 覆盖 UAX #14 revision 57 与 UAX #9 revision 51 的新规则
 - 属性表按需拆分，便于按包裁剪
 - 提供零依赖核心 + CLI + 官方语料自检
 

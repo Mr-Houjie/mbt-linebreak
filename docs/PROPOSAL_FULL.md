@@ -5,7 +5,7 @@
 - **项目名称**：mbt-linebreak（基于 MoonBit 的 Unicode 文本边界与行断裂库）
 - **仓库**：https://github.com/Mr-Houjie/mbt-linebreak
 - **许可证**：MIT ｜ **语言**：MoonBit ≥ 0.1.20261028（moonc ≥ 0.10.18）
-- **Unicode 版本**：18.0.0（UAX #14 revision 57、UAX #29 revision 49）
+- **Unicode 版本**：18.0.0（UAX #14 revision 57、UAX #29 revision 49、UAX #9 revision 51）
 
 ## 二、项目简介
 
@@ -49,8 +49,10 @@ MoonBit 生态现状：已有字素簇断点（`moonbit-community/find_cluster_b
 | WordBreakTest.txt | 1944 / 1944 |
 | SentenceBreakTest.txt | 512 / 512 |
 | LineBreakTest.txt | 19346 / 19346 |
+| BidiCharacterTest.txt | 91707 / 91707 |
+| BidiTest.txt | 770241 / 770241 |
 
-合计 22,655 条，100% 通过。CI 中同时运行 Python 参考实现对拍，防止两个实现同时漂移。
+合计 884,603 条，100% 通过。CI 中同时运行两份 Python 参考实现对拍，防止两个实现同时漂移。
 
 ## 六、项目性质与移植声明
 
@@ -61,15 +63,15 @@ MoonBit 生态现状：已有字素簇断点（`moonbit-community/find_cluster_b
   另参考 [unicode-linebreak](https://github.com/axelf4/unicode-linebreak)（Rust，Apache-2.0）、
   [unicode-segmentation](https://github.com/unicode-rs/unicode-segmentation)（Rust，MIT/Apache-2.0）、
   [textwrap](https://github.com/mgeisler/textwrap)（Rust，MIT）的实现思路。
-- **移植范围**：UAX #29 三类边界 + UAX #14 行断裂 + 等宽宽度 + 折行 API。
-- **不复用源代码**：实现依据 UAX #14 / UAX #29 规范与 Unicode 官方测试语料；
-  开发期的 Python 参考实现 `tools/oracle.py` 亦为本项目原创。
-- **不含**：BiDi、词典断词（泰/老挝/高棉）、连字（hyphenation）、字形 shaping。
+- **移植范围**：UAX #29 三类边界 + UAX #14 行断裂 + UAX #9 双向算法 + 等宽宽度 + 折行 API。
+- **不复用源代码**：实现依据 UAX #14 / UAX #29 / UAX #9 规范与 Unicode 官方测试语料；
+  开发期的 Python 参考实现 `tools/oracle.py` 与 `tools/oracle_bidi.py` 亦为本项目原创。
+- **不含**：词典断词（泰/老挝/高棉）、连字（hyphenation）、字形 shaping。
 
 ## 七、相对参考实现的增量
 
 1. 对齐 Unicode **18.0.0**；`rivo/uniseg` 当前为 15.0，`unicode-segmentation` 为 17.0
-2. 覆盖 UAX #14 revision 57 新增规则（LB15a/b/c/d、LB19a、LB20a）
+2. 覆盖 UAX #14 revision 57 与 UAX #9 revision 51 新增规则（LB15a/b/c/d、LB19a、LB20a、隔离符与括号配对）
 3. 零依赖核心 + 可裁剪的属性表 + CLI + 官方语料自检
 4. 中文场景的断行基线：CJK 与拉丁混排、标点不可行首等行为可被上层排版器直接复用
 
