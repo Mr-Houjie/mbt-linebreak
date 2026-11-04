@@ -1,0 +1,36 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Mr-Houjie/mbt-linebreak/bidi"
+
+// Values
+pub fn class_from_name(String) -> Int32
+
+pub fn paragraph_level_of(String, Direction) -> Int32
+
+pub fn reorder(String, Direction) -> String
+
+pub fn resolve(String, Direction) -> BidiResult
+
+pub fn resolve_by_classes(Array[Int32], Direction) -> BidiResult
+
+pub fn resolve_codepoints(Array[Int32], Direction) -> BidiResult
+
+pub fn unicode_version() -> String
+
+// Errors
+
+// Types and methods
+pub(all) struct BidiResult {
+  levels : Array[Int32]
+  order : Array[Int32]
+  paragraph_level : Int32
+}
+
+pub(all) enum Direction {
+  Auto
+  Ltr
+  Rtl
+}
+
+// Type aliases
+
+// Traits
