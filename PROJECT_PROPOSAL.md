@@ -1,7 +1,5 @@
 # 项目申报书：mbt-linebreak
 
-> 一页版。完整版（含数据管线、工程细节与风险边界）见 [docs/PROPOSAL_FULL.md](docs/PROPOSAL_FULL.md)。
-
 ## 一、项目概览
 
 - **项目名称**：mbt-linebreak —— 对标 [rivo/uniseg](https://github.com/rivo/uniseg) 的 MoonBit 迁移
