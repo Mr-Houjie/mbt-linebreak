@@ -53,4 +53,6 @@ jobs:
           done
 
       - name: Python oracle cross-check
-        run: python3 tools/oracle.py
+        run: |
+          python3 tools/oracle.py
+          python3 tools/oracle_bidi.py
